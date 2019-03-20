@@ -20,7 +20,7 @@ main =
         { init = \_ -> init
         , view = view
         , update = update
-        , subscriptions = subscriptions
+        , subscriptions = \_ -> Sub.none
         }
 
 
@@ -35,14 +35,7 @@ init =
 
 type alias Model =
     { board : GameLogic.Board
-    , placing : Maybe Placing
-    }
-
-
-type alias Placing =
-    { piece : GameLogic.Piece
-    , clientX : Float
-    , clientY : Float
+    , placing : Maybe GameLogic.Piece
     }
 
 
@@ -59,7 +52,6 @@ type Msg
     = NoOp
     | PickedUp GameLogic.Piece
     | ReleasedOver Array2D.Position
-    | MouseMoved Float Float
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -69,11 +61,11 @@ update msg model =
             ( model, Cmd.none )
 
         PickedUp piece ->
-            ( { model | placing = Just <| Placing piece 0.0 0.0 }, Cmd.none )
+            ( { model | placing = Just piece }, Cmd.none )
 
         ReleasedOver pos ->
             case model.placing of
-                Just { piece, clientX, clientY } ->
+                Just piece ->
                     ( { model
                         | board =
                             GameLogic.placePiece pos piece model.board
@@ -82,18 +74,6 @@ update msg model =
                       }
                     , Cmd.none
                     )
-
-                Nothing ->
-                    ( model, Cmd.none )
-
-        MouseMoved x y ->
-            case model.placing of
-                Just placing ->
-                    let
-                        newPlacing =
-                            { placing | clientX = x, clientY = y }
-                    in
-                    ( { model | placing = Just newPlacing }, Cmd.none )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -165,12 +145,6 @@ view model =
                     [ Element.width Element.fill
                     , Element.height Element.fill
                     , Element.Events.onMouseDown (PickedUp piece)
-                    , Element.htmlAttribute <| Html.Attributes.class "draggablePiece"
-
-                    {- css class is to disable pointer events on the image (this element only
-                       controls a div that is the parent of the image) so that the dragging works
-                       properly (no image ghost)
-                    -}
                     ]
                     { src = ExternalUrls.pieceImage piece, description = "" }
             )
@@ -183,42 +157,7 @@ view model =
                 ]
         ]
         |> Element.layout
-            [ Element.inFront
-                (case model.placing of
-                    Just { piece, clientX, clientY } ->
-                        Element.image
-                            [ Element.width <| Element.px squareSide
-                            , Element.height <| Element.px squareSide
-                            , Element.moveRight clientX
-                            , Element.moveDown clientY
-                            , Element.htmlAttribute <| Html.Attributes.class "draggablePiece"
-                            ]
-                            { src = ExternalUrls.pieceImage piece, description = "" }
-
-                    Nothing ->
-                        Element.none
-                )
-            , Element.width Element.fill
+            [ Element.width Element.fill
             , Element.height Element.fill
             , Element.htmlAttribute <| Html.Attributes.style "user-select" "none"
             ]
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub.Sub Msg
-subscriptions model =
-    if model.placing /= Nothing then
-        Browser.Events.onMouseMove positionDecode
-
-    else
-        Sub.none
-
-
-positionDecode : Decode.Decoder Msg
-positionDecode =
-    Decode.map2 MouseMoved
-        (Decode.field "clientX" Decode.float)
-        (Decode.field "clientY" Decode.float)
