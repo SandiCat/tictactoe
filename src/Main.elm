@@ -186,15 +186,14 @@ view model =
             [ Element.inFront
                 (case model.placing of
                     Just { piece, clientX, clientY } ->
-                        Element.el []
-                            (Element.image
-                                [ Element.width <| Element.px squareSide
-                                , Element.height <| Element.px squareSide
-                                , Element.moveRight clientX
-                                , Element.moveDown clientY
-                                ]
-                                { src = ExternalUrls.pieceImage piece, description = "" }
-                            )
+                        Element.image
+                            [ Element.width <| Element.px squareSide
+                            , Element.height <| Element.px squareSide
+                            , Element.moveRight clientX
+                            , Element.moveDown clientY
+                            , Element.htmlAttribute <| Html.Attributes.class "draggablePiece"
+                            ]
+                            { src = ExternalUrls.pieceImage piece, description = "" }
 
                     Nothing ->
                         Element.none
