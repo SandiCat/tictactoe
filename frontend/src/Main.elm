@@ -217,5 +217,3 @@ view model =
             , Element.height Element.fill
             , Element.htmlAttribute <| Html.Attributes.style "user-select" "none"
             ]
-
-..

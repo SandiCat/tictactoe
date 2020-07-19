@@ -1,3 +1,5 @@
 frontend/elm-stuff/
 frontend/build/elm.js
 frontend/elmjutsu-config.json
+
+\.vscode/
